@@ -94,7 +94,10 @@ export default function Profile() {
   return (
     <div>
       {/* Profile hero */}
-      <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 px-5 pb-6 pt-5">
+      <div
+        className="relative bg-gradient-to-br from-slate-900 to-slate-800 px-5 pb-6"
+        style={{ paddingTop: "max(3.25rem, calc(env(safe-area-inset-top) + 2.75rem))" }}
+      >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,rgba(251,146,60,0.10),transparent)]" />
         <div className="relative flex items-start justify-between">
           <div className="flex items-center gap-4">

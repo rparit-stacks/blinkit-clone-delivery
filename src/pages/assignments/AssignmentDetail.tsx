@@ -65,10 +65,10 @@ export default function AssignmentDetail() {
   if (isLoading) {
     return (
       <div className="space-y-3 px-4 py-5">
-        <div className="h-10 w-32 animate-pulse rounded-2xl bg-slate-200" />
-        <div className="h-48 animate-pulse rounded-3xl bg-slate-200" />
-        <div className="h-32 animate-pulse rounded-3xl bg-slate-200" />
-        <div className="h-32 animate-pulse rounded-3xl bg-slate-200" />
+        <div className="skeleton h-10 w-32 rounded-2xl" />
+        <div className="skeleton h-48 rounded-3xl" />
+        <div className="skeleton h-32 rounded-3xl" />
+        <div className="skeleton h-32 rounded-3xl" />
       </div>
     );
   }
@@ -98,7 +98,10 @@ export default function AssignmentDetail() {
   return (
     <div className="min-h-full">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-200/70 bg-white/97 px-4 py-3 backdrop-blur-xl">
+      <div
+        className="sticky top-0 z-10 flex items-center gap-3 border-b border-black/[0.06] bg-[#f2f2f7]/95 px-4 py-3 backdrop-blur-xl"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+      >
         <button
           type="button"
           onClick={() => navigate("/assignments")}

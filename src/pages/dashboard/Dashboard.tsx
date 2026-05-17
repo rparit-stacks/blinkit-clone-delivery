@@ -72,7 +72,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-full pb-2">
       {/* Hero header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-5 pb-8 pt-5">
+      <div
+        className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-5 pb-8"
+        style={{ paddingTop: "max(3.25rem, calc(env(safe-area-inset-top) + 2.75rem))" }}
+      >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,rgba(251,146,60,0.15),transparent)]" />
         <div className="relative">
           <p className="text-sm text-slate-400">{greeting},</p>
@@ -96,8 +99,8 @@ export default function Dashboard() {
       <div className="px-4 -mt-4">
         {statsLoading ? (
           <div className="grid grid-cols-2 gap-3">
-            {[0,1,2,3].map(i => (
-              <div key={i} className="h-28 animate-pulse rounded-2xl bg-white shadow-sm" />
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="skeleton h-28 rounded-2xl" />
             ))}
           </div>
         ) : (

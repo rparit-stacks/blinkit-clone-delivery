@@ -2,6 +2,12 @@
 
 @theme {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-app-bg: #f2f2f7;
+  --color-app-surface: #ffffff;
+  --color-app-ink: #1c1c1e;
+  --color-app-muted: #8e8e93;
+  --color-app-accent: #f97316;
+  --color-app-dark: #0c0c0e;
 }
 
 *,
@@ -13,7 +19,6 @@
 html {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-  scroll-behavior: smooth;
 }
 
 body {
@@ -21,9 +26,9 @@ body {
   min-height: 100dvh;
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   font-size: 15px;
-  line-height: 1.5;
-  color: #0f172a;
-  background: #f1f5f9;
+  line-height: 1.45;
+  color: var(--color-app-ink);
+  background: #0a0a0c;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
@@ -32,30 +37,407 @@ body {
 #root {
   min-height: 100dvh;
   width: 100%;
-  max-width: none;
   margin: 0;
   text-align: start;
 }
 
-/* Smooth momentum scrolling on iOS */
-.overflow-y-auto,
-.overflow-y-scroll {
+/* ─── Mobile app shell ─────────────────────────────────────────────────────── */
+
+.app-frame {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  flex-direction: column;
+  background: var(--color-app-bg);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 24px 80px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+@media (min-width: 480px) {
+  .app-frame {
+    min-height: calc(100dvh - 2rem);
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 2rem;
+    min-height: calc(100dvh - 2rem);
+  }
+}
+
+.app-main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Remove default button tap flash */
-button, a {
+.app-main--immersive {
+  background: var(--color-app-bg);
+}
+
+.app-main--stack {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-main--tabs {
+  padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+}
+
+/* ─── Native top bar ───────────────────────────────────────────────────────── */
+
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex-shrink: 0;
+  padding-top: env(safe-area-inset-top);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.app-topbar__inner {
+  display: flex;
+  height: 3rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem 0 0.5rem;
+}
+
+.app-icon-btn {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.65rem;
+  color: var(--color-app-ink);
+  transition: background 0.15s, transform 0.1s;
+}
+
+.app-icon-btn:active {
+  transform: scale(0.94);
+  background: rgba(120, 120, 128, 0.16);
+}
+
+/* ─── Bottom tab bar (iOS-style) ─────────────────────────────────────────────── */
+
+.app-tabbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-top: 0.5px solid rgba(60, 60, 67, 0.14);
+}
+
+.app-tabbar__row {
+  display: flex;
+  height: 3.25rem;
+  align-items: stretch;
+}
+
+.app-tab {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  color: var(--color-app-muted);
+  transition: color 0.15s;
+}
+
+.app-tab--active {
+  color: var(--color-app-accent);
+}
+
+.app-tab__icon-wrap {
+  position: relative;
+  display: flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-tab__badge {
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  display: flex;
+  min-width: 1rem;
+  height: 1rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #ff3b30;
+  padding: 0 0.25rem;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+  border: 1.5px solid white;
+}
+
+.app-tab__label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ─── Drawer (slide-over menu) ─────────────────────────────────────────────── */
+
+.drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
+}
+
+.drawer-backdrop--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 70;
+  display: flex;
+  width: min(88%, 300px);
+  flex-direction: column;
+  background: var(--color-app-dark);
+  transform: translateX(-100%);
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 8px 0 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.drawer-panel--open {
+  transform: translateX(0);
+}
+
+/* Online switch (native feel) */
+.online-switch {
+  position: relative;
+  display: inline-flex;
+  height: 2rem;
+  width: 3.5rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.125rem;
+  transition: background 0.25s;
+}
+
+.online-switch--on {
+  background: #34c759;
+}
+
+.online-switch--off {
+  background: rgba(120, 120, 128, 0.32);
+}
+
+.online-switch__thumb {
+  height: 1.75rem;
+  width: 1.75rem;
+  border-radius: 9999px;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.online-switch--on .online-switch__thumb {
+  transform: translateX(1.5rem);
+}
+
+.online-switch--lg {
+  height: 2rem;
+  width: 3.5rem;
+}
+
+.online-switch--lg .online-switch__thumb {
+  height: 1.75rem;
+  width: 1.75rem;
+}
+
+.online-switch--lg.online-switch--on .online-switch__thumb {
+  transform: translateX(1.5rem);
+}
+
+/* ─── Splash screen ─────────────────────────────────────────────────────────── */
+
+.app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(165deg, #0c0c0e 0%, #1a1208 50%, #0c0c0e 100%);
+  gap: 0.5rem;
+}
+
+.app-splash__logo {
+  display: flex;
+  height: 4.5rem;
+  width: 4.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #fbbf24, #ea580c);
+  box-shadow: 0 12px 40px rgba(234, 88, 12, 0.45);
+  animation: splash-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.app-splash__title {
+  margin: 1rem 0 0;
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: white;
+  animation: splash-fade 0.5s 0.15s ease both;
+}
+
+.app-splash__sub {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  animation: splash-fade 0.5s 0.25s ease both;
+}
+
+.app-splash__bar {
+  margin-top: 2rem;
+  width: 7rem;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.app-splash__bar-fill {
+  display: block;
+  height: 100%;
+  width: 40%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f97316, #fbbf24);
+  animation: splash-bar 1s ease-in-out infinite;
+}
+
+@keyframes splash-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes splash-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splash-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(280%);
+  }
+}
+
+/* ─── Skeleton shimmer ──────────────────────────────────────────────────────── */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(120, 120, 128, 0.16);
+  border-radius: 0.75rem;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ─── Utilities ─────────────────────────────────────────────────────────────── */
+
+.overflow-y-auto,
+.overflow-y-scroll,
+.app-main {
+  -webkit-overflow-scrolling: touch;
+}
+
+button,
+a {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-/* Hide scrollbars on mobile but keep scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 ::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
 
-/* Input zoom prevention on iOS — keep font-size >= 16px for inputs */
 input[type="text"],
 input[type="email"],
 input[type="tel"],
@@ -66,8 +448,18 @@ textarea {
   font-size: 16px;
 }
 
-@media (min-width: 1024px) {
-  body {
-    font-size: 16px;
-  }
+/* Grouped list cards (iOS settings style) */
+.app-card {
+  border-radius: 0.875rem;
+  background: var(--color-app-surface);
+  box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.04);
+}
+
+.app-section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-app-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 1rem 0.375rem;
 }

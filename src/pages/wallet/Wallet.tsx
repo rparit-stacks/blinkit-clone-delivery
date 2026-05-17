@@ -93,16 +93,10 @@ export default function Wallet() {
 
   return (
     <div className="min-h-full">
-      {/* Header */}
-      <div className="border-b border-slate-200/70 bg-white/97 px-5 pt-5 pb-4 backdrop-blur-xl">
-        <h1 className="text-[22px] font-bold tracking-tight text-slate-900">Wallet</h1>
-        <p className="text-sm text-slate-400 mt-0.5">Earnings and withdrawals</p>
-      </div>
-
       <div className="space-y-4 px-4 py-4">
         {/* Balance card */}
         {walletLoading ? (
-          <div className="h-48 animate-pulse rounded-3xl bg-slate-200" />
+          <div className="skeleton h-48 rounded-3xl" />
         ) : wallet ? (
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 shadow-xl">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,rgba(251,146,60,0.12),transparent)]" />

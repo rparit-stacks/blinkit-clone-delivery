@@ -113,15 +113,11 @@ export default function Notifications() {
 
   return (
     <div className="min-h-full">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/97 backdrop-blur-xl">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <div>
-            <h1 className="text-[22px] font-bold tracking-tight text-slate-900">Notifications</h1>
-            <p className="mt-0.5 text-sm text-slate-400">
-              {unread > 0 ? `${unread} unread` : "All caught up"}
-            </p>
-          </div>
+      <div className="sticky top-0 z-10 border-b border-black/[0.06] bg-[#f2f2f7]/90 backdrop-blur-xl">
+        <div className="flex items-center justify-between px-4 py-2">
+          <p className="text-sm text-[#8e8e93]">
+            {unread > 0 ? `${unread} unread` : "All caught up"}
+          </p>
           {unread > 0 && (
             <button
               type="button"

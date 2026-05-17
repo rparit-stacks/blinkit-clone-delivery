@@ -43,7 +43,7 @@ export default function App() {
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
-          <Toaster richColors position="top-center" />
+          <Toaster richColors position="top-center" toastOptions={{ className: "font-sans text-sm" }} />
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>

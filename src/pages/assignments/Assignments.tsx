@@ -42,15 +42,9 @@ export default function Assignments() {
   return (
     <div className="min-h-full">
       {/* Sticky header + tabs */}
-      <div className="sticky top-0 z-10 bg-white/97 backdrop-blur-xl border-b border-slate-200/70">
-        <div className="px-5 pt-5 pb-3">
-          <h1 className="text-[22px] font-bold tracking-tight text-slate-900">Orders</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Your assignments and history</p>
-        </div>
-
-        {/* Segment control */}
-        <div className="px-4 pb-3">
-          <div className="flex rounded-2xl bg-slate-100 p-1 gap-1">
+      <div className="sticky top-0 z-10 border-b border-black/[0.06] bg-[#f2f2f7]/90 backdrop-blur-xl">
+        <div className="px-4 pb-3 pt-2">
+          <div className="flex rounded-xl bg-black/[0.06] p-1 gap-1">
             {(["ACTIVE", "DELIVERED", "ALL"] as Tab[]).map((t) => (
               <button
                 key={t}
@@ -59,7 +53,7 @@ export default function Assignments() {
                 className={clsx(
                   "flex-1 rounded-xl py-2 text-center text-xs font-bold transition-all",
                   tab === t
-                    ? "bg-white text-slate-900 shadow-sm"
+                    ? "bg-white text-slate-900 shadow-sm ring-1 ring-black/[0.04]"
                     : "text-slate-500"
                 )}
               >
@@ -81,7 +75,7 @@ export default function Assignments() {
       <div className="px-4 py-4 space-y-2.5">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl bg-white shadow-sm" />
+            <div key={i} className="skeleton h-28 rounded-2xl" />
           ))
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center rounded-3xl border border-dashed border-slate-200 bg-white py-16 text-center shadow-sm mt-2">
