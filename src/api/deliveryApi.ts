@@ -1,5 +1,14 @@
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
+/** Build href for uploaded files (KYC). Uses `VITE_API_BASE_URL` when set; otherwise same-origin path. */
+export function resolveMediaUrl(relativeOrAbsolute: string): string {
+  if (!relativeOrAbsolute) return "#";
+  if (/^https?:\/\//i.test(relativeOrAbsolute)) return relativeOrAbsolute;
+  const path = relativeOrAbsolute.startsWith("/") ? relativeOrAbsolute : `/${relativeOrAbsolute}`;
+  if (BASE) return `${BASE.replace(/\/$/, "")}${path}`;
+  return path;
+}
+
 const TOKEN_KEY = "delivery_token";
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t: string) => localStorage.setItem(TOKEN_KEY, t);
@@ -146,6 +155,23 @@ export interface DashboardStats {
   earningsTodayPaise: number;
   totalEarningsPaise: number;
   walletBalancePaise: number;
+}
+
+// ─── OTP ─────────────────────────────────────────────────────────────────────
+export const deliverySendOtp = (email: string) =>
+  post<{ otp?: string }>("/api/delivery/auth/send-otp", { email });
+export const deliveryVerifyOtp = (email: string, otp: string) =>
+  post<{ verified: string }>("/api/delivery/auth/verify-otp", { email, otp });
+
+// ─── File upload ─────────────────────────────────────────────────────────────
+export async function uploadFile(file: File, folder = "delivery-docs"): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("folder", folder);
+  const res = await fetch(`${BASE}/api/upload`, { method: "POST", body: form });
+  const json = await res.json();
+  if (!res.ok || !json.success) throw new Error(json.message ?? "Upload failed");
+  return json.data.url as string;
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────

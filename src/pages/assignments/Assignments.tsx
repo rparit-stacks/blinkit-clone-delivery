@@ -2,17 +2,17 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAssignments } from "../../api/deliveryApi";
 import { useNavigate } from "react-router-dom";
-import { Package, MapPin, Clock, ChevronRight } from "lucide-react";
+import { Package, MapPin, Clock, ChevronRight, Bike } from "lucide-react";
 import clsx from "clsx";
 
-const STATUS_COLORS: Record<string, string> = {
-  ASSIGNED: "bg-blue-100 text-blue-700 border-blue-200",
-  ACCEPTED: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  PICKED_UP: "bg-purple-100 text-purple-700 border-purple-200",
-  ON_THE_WAY: "bg-orange-100 text-orange-700 border-orange-200",
-  DELIVERED: "bg-green-100 text-green-700 border-green-200",
-  CANCELLED: "bg-red-100 text-red-700 border-red-200",
-  REJECTED: "bg-red-100 text-red-700 border-red-200",
+const STATUS_META: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+  ASSIGNED:   { bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-500",   label: "Assigned" },
+  ACCEPTED:   { bg: "bg-indigo-50", text: "text-indigo-700", dot: "bg-indigo-500", label: "Accepted" },
+  PICKED_UP:  { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500", label: "Picked Up" },
+  ON_THE_WAY: { bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-500", label: "On the way" },
+  DELIVERED:  { bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500",  label: "Delivered" },
+  CANCELLED:  { bg: "bg-red-50",    text: "text-red-700",    dot: "bg-red-500",    label: "Cancelled" },
+  REJECTED:   { bg: "bg-red-50",    text: "text-red-700",    dot: "bg-red-500",    label: "Rejected" },
 };
 
 type Tab = "ACTIVE" | "DELIVERED" | "ALL";
@@ -34,101 +34,150 @@ export default function Assignments() {
   });
 
   const counts = {
-    ACTIVE: assignments.filter(a => ["ASSIGNED", "ACCEPTED", "PICKED_UP", "ON_THE_WAY"].includes(a.status)).length,
+    ACTIVE:    assignments.filter(a => ["ASSIGNED", "ACCEPTED", "PICKED_UP", "ON_THE_WAY"].includes(a.status)).length,
     DELIVERED: assignments.filter(a => a.status === "DELIVERED").length,
-    ALL: assignments.length,
+    ALL:       assignments.length,
   };
 
   return (
     <div className="min-h-full">
-      <div className="px-5 py-4 bg-white border-b border-slate-100 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-900">My Orders</h1>
-        <div className="flex gap-1.5 mt-3 overflow-x-auto pb-0.5">
-          {(["ACTIVE", "DELIVERED", "ALL"] as Tab[]).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border transition-colors",
-                tab === t
-                  ? "bg-orange-500 text-white border-orange-500"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-              )}
-            >
-              {t} ({counts[t]})
-            </button>
-          ))}
+      {/* Sticky header + tabs */}
+      <div className="sticky top-0 z-10 bg-white/97 backdrop-blur-xl border-b border-slate-200/70">
+        <div className="px-5 pt-5 pb-3">
+          <h1 className="text-[22px] font-bold tracking-tight text-slate-900">Orders</h1>
+          <p className="text-sm text-slate-400 mt-0.5">Your assignments and history</p>
+        </div>
+
+        {/* Segment control */}
+        <div className="px-4 pb-3">
+          <div className="flex rounded-2xl bg-slate-100 p-1 gap-1">
+            {(["ACTIVE", "DELIVERED", "ALL"] as Tab[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className={clsx(
+                  "flex-1 rounded-xl py-2 text-center text-xs font-bold transition-all",
+                  tab === t
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500"
+                )}
+              >
+                {t === "ACTIVE" ? "Active" : t === "DELIVERED" ? "Done" : "All"}
+                {" "}
+                <span className={clsx(
+                  "tabular-nums text-[10px]",
+                  tab === t ? "text-orange-600" : "text-slate-400"
+                )}>
+                  ({counts[t]})
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="p-5 space-y-3">
+      {/* List */}
+      <div className="px-4 py-4 space-y-2.5">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 bg-white rounded-2xl border border-slate-100 animate-pulse" />
+            <div key={i} className="h-28 animate-pulse rounded-2xl bg-white shadow-sm" />
           ))
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 py-16 text-center">
-            <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 font-medium">No {tab.toLowerCase()} orders</p>
-            <p className="text-slate-400 text-sm mt-1">
-              {tab === "ACTIVE" ? "Go online to receive new deliveries" : "Completed deliveries will appear here"}
+          <div className="flex flex-col items-center rounded-3xl border border-dashed border-slate-200 bg-white py-16 text-center shadow-sm mt-2">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
+              <Package className="h-7 w-7 text-slate-300" />
+            </div>
+            <p className="font-semibold text-slate-700">No {tab === "ACTIVE" ? "active" : tab === "DELIVERED" ? "completed" : ""} orders</p>
+            <p className="mt-1 text-sm text-slate-400">
+              {tab === "ACTIVE" ? "Go online to receive deliveries" : "Completed deliveries appear here"}
             </p>
           </div>
         ) : (
-          filtered.map(a => (
-            <button
-              key={a.id}
-              onClick={() => navigate(`/assignments/${a.id}`)}
-              className="w-full bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all text-left overflow-hidden"
-            >
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <p className="font-bold text-slate-900">{a.displayId}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{a.orderSummary}</p>
-                  </div>
-                  <span className={clsx("text-[10px] font-bold px-2.5 py-1 rounded-full border shrink-0", STATUS_COLORS[a.status])}>
-                    {a.status.replace("_", " ")}
-                  </span>
-                </div>
-
-                <div className="space-y-1.5 mb-3">
-                  <div className="flex items-start gap-2">
-                    <div className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center mt-0.5 shrink-0">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    </div>
-                    <p className="text-xs text-slate-600 truncate">{a.sellerStoreName || "Seller Store"}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-slate-600 truncate">
-                      {a.customerName ? `${a.customerName}` : "Customer"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{new Date(a.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                    <span>·</span>
-                    <span className={clsx(
-                      "font-medium",
-                      a.paymentMode === "cod" ? "text-orange-600" : "text-green-600"
-                    )}>
-                      {a.paymentMode?.toUpperCase()} {a.paid ? "✓" : ""}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-slate-900">
-                    <span className="font-bold text-sm">₹{(a.deliveryFee / 100).toFixed(0)}</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400" />
-                  </div>
-                </div>
-              </div>
-            </button>
-          ))
+          filtered.map(a => <OrderCard key={a.id} a={a} onClick={() => navigate(`/assignments/${a.id}`)} />)
         )}
       </div>
     </div>
+  );
+}
+
+function OrderCard({ a, onClick }: { a: any; onClick: () => void }) {
+  const sm = STATUS_META[a.status] ?? STATUS_META.ASSIGNED;
+  const isActive = ["ASSIGNED", "ACCEPTED", "PICKED_UP", "ON_THE_WAY"].includes(a.status);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={clsx(
+        "w-full rounded-2xl border bg-white text-left shadow-sm transition-all active:scale-[0.98] overflow-hidden",
+        isActive ? "border-orange-200/60 shadow-orange-100/60" : "border-slate-200/70"
+      )}
+    >
+      {/* Active indicator bar */}
+      {isActive && (
+        <div className="h-1 w-full bg-gradient-to-r from-orange-400 to-amber-400" />
+      )}
+
+      <div className="p-4">
+        {/* Top row */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={clsx(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+              isActive ? "bg-orange-100" : "bg-slate-100"
+            )}>
+              <Bike className={clsx("h-4 w-4", isActive ? "text-orange-600" : "text-slate-500")} />
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-slate-900 text-[15px]">{a.displayId}</p>
+              <p className="text-xs text-slate-500 truncate mt-0.5">{a.orderSummary}</p>
+            </div>
+          </div>
+          <span className={clsx(
+            "shrink-0 flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold",
+            sm.bg, sm.text
+          )}>
+            <span className={clsx("h-1.5 w-1.5 rounded-full", sm.dot)} />
+            {sm.label}
+          </span>
+        </div>
+
+        {/* Addresses */}
+        <div className="space-y-1.5 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            </div>
+            <p className="text-xs text-slate-600 truncate">{a.sellerStoreName || "Seller Store"}</p>
+          </div>
+          <div className="ml-2 h-3 border-l border-dashed border-slate-200" />
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 shrink-0 text-orange-500" />
+            <p className="text-xs text-slate-600 truncate">{a.customerName || "Customer"}</p>
+          </div>
+        </div>
+
+        {/* Bottom row */}
+        <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
+          <div className="flex items-center gap-3 text-xs text-slate-400">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {new Date(a.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+            <span className={clsx(
+              "font-semibold px-1.5 py-0.5 rounded text-[10px]",
+              a.paymentMode === "cod" ? "bg-orange-50 text-orange-700" : "bg-green-50 text-green-700"
+            )}>
+              {a.paymentMode?.toUpperCase()} {a.paid ? "✓" : ""}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-bold text-slate-900">₹{(a.deliveryFee / 100).toFixed(0)}</span>
+            <ChevronRight className="h-4 w-4 text-slate-400" />
+          </div>
+        </div>
+      </div>
+    </button>
   );
 }

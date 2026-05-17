@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { setToken, clearToken, type DeliveryAuthResponse } from "../api/deliveryApi";
+import { clearDeliveryPushRegistration } from "../lib/pushNotifications";
 
 interface AuthState {
   token: string | null;
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    clearDeliveryPushRegistration();
     clearToken();
     setState({ token: null, partner: null });
   };

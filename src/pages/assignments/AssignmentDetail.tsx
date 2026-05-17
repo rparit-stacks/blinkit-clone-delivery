@@ -3,41 +3,33 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchAssignment, updateAssignmentStatus } from "../../api/deliveryApi";
 import {
   ArrowLeft, Phone, Package, CreditCard, Navigation,
-  CheckCircle, Loader2, User, Store, TrendingUp
+  CheckCircle, Loader2, User, Store, IndianRupee
 } from "lucide-react";
 import { toast } from "sonner";
 import clsx from "clsx";
 
-const STATUS_COLORS: Record<string, string> = {
-  ASSIGNED: "bg-blue-100 text-blue-700",
-  ACCEPTED: "bg-indigo-100 text-indigo-700",
-  PICKED_UP: "bg-purple-100 text-purple-700",
-  ON_THE_WAY: "bg-orange-100 text-orange-700",
-  DELIVERED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-red-100 text-red-700",
-  REJECTED: "bg-red-100 text-red-700",
+const STATUS_META: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+  ASSIGNED:   { bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-500",   label: "Assigned" },
+  ACCEPTED:   { bg: "bg-indigo-50", text: "text-indigo-700", dot: "bg-indigo-500", label: "Accepted" },
+  PICKED_UP:  { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500", label: "Picked Up" },
+  ON_THE_WAY: { bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-500", label: "On the way" },
+  DELIVERED:  { bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500",  label: "Delivered" },
+  CANCELLED:  { bg: "bg-red-50",    text: "text-red-700",    dot: "bg-red-500",    label: "Cancelled" },
+  REJECTED:   { bg: "bg-red-50",    text: "text-red-700",    dot: "bg-red-500",    label: "Rejected" },
 };
 
-const NEXT_STATUS: Record<string, { label: string; status: string; color: string }[]> = {
-  ASSIGNED: [
-    { label: "Accept Order", status: "ACCEPTED", color: "bg-blue-600 text-white" },
-    { label: "Reject", status: "REJECTED", color: "bg-red-50 text-red-600 border border-red-200" },
+const NEXT_STATUS: Record<string, { label: string; status: string; primary: boolean }[]> = {
+  ASSIGNED:   [
+    { label: "Accept Order",    status: "ACCEPTED",    primary: true },
+    { label: "Reject",          status: "REJECTED",    primary: false },
   ],
-  ACCEPTED: [
-    { label: "Mark Picked Up", status: "PICKED_UP", color: "bg-purple-600 text-white" },
-  ],
-  PICKED_UP: [
-    { label: "I'm On The Way", status: "ON_THE_WAY", color: "bg-orange-500 text-white" },
-  ],
-  ON_THE_WAY: [
-    { label: "Mark as Delivered", status: "DELIVERED", color: "bg-green-600 text-white" },
-  ],
-  DELIVERED: [],
-  CANCELLED: [],
-  REJECTED: [],
+  ACCEPTED:   [{ label: "Mark Picked Up",    status: "PICKED_UP",   primary: true }],
+  PICKED_UP:  [{ label: "I'm On The Way",    status: "ON_THE_WAY",  primary: true }],
+  ON_THE_WAY: [{ label: "Mark as Delivered", status: "DELIVERED",   primary: true }],
 };
 
 const STATUS_STEPS = ["ASSIGNED", "ACCEPTED", "PICKED_UP", "ON_THE_WAY", "DELIVERED"];
+const STEP_LABELS  = ["Assigned", "Accepted", "Picked Up", "On the way", "Delivered"];
 
 export default function AssignmentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -57,36 +49,40 @@ export default function AssignmentDetail() {
       qc.invalidateQueries({ queryKey: ["delivery", "assignments"] });
       qc.invalidateQueries({ queryKey: ["delivery", "dashboard"] });
       qc.invalidateQueries({ queryKey: ["delivery", "wallet"] });
-      toast.success(`Status updated to ${data.status.replace("_", " ")}`);
+      toast.success(`Status: ${data.status.replace(/_/g, " ")}`);
       if (data.status === "DELIVERED") {
-        toast.success("Delivery complete! Earnings credited to wallet 🎉", { duration: 4000 });
+        toast.success("Delivery complete! Earnings credited 🎉", { duration: 4000 });
       }
     },
     onError: (e) => toast.error((e as Error).message),
   });
 
   const openMaps = (address: string, label: string) => {
-    const query = encodeURIComponent(address);
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, "_blank");
-    toast.info(`Opening ${label} in Google Maps`);
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`, "_blank");
+    toast.info(`Opening ${label} in Maps`);
   };
 
   if (isLoading) {
     return (
-      <div className="p-5 space-y-4">
-        <div className="h-8 bg-slate-100 rounded-xl animate-pulse w-1/3" />
-        <div className="h-48 bg-slate-100 rounded-2xl animate-pulse" />
-        <div className="h-32 bg-slate-100 rounded-2xl animate-pulse" />
+      <div className="space-y-3 px-4 py-5">
+        <div className="h-10 w-32 animate-pulse rounded-2xl bg-slate-200" />
+        <div className="h-48 animate-pulse rounded-3xl bg-slate-200" />
+        <div className="h-32 animate-pulse rounded-3xl bg-slate-200" />
+        <div className="h-32 animate-pulse rounded-3xl bg-slate-200" />
       </div>
     );
   }
 
   if (!assignment) {
     return (
-      <div className="p-5 text-center py-20">
+      <div className="flex flex-col items-center px-6 py-20 text-center">
         <p className="text-slate-500">Assignment not found</p>
-        <button onClick={() => navigate("/assignments")} className="mt-4 text-orange-500 font-semibold">
-          ← Back to Orders
+        <button
+          type="button"
+          onClick={() => navigate("/assignments")}
+          className="mt-4 rounded-2xl px-6 py-3 font-semibold text-orange-600"
+        >
+          Back to orders
         </button>
       </div>
     );
@@ -96,189 +92,169 @@ export default function AssignmentDetail() {
   const currentStepIdx = STATUS_STEPS.indexOf(assignment.status);
   const parseAddr = (s: string) => { try { return JSON.parse(s); } catch { return null; } };
   const delivAddr = parseAddr(assignment.deliveryAddress);
+  const sm = STATUS_META[assignment.status] ?? STATUS_META.ASSIGNED;
+  const isFinal = ["DELIVERED", "CANCELLED", "REJECTED"].includes(assignment.status);
 
   return (
-    <div className="min-h-full bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
+    <div className="min-h-full">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-200/70 bg-white/97 px-4 py-3 backdrop-blur-xl">
         <button
+          type="button"
           onClick={() => navigate("/assignments")}
-          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors active:bg-slate-200"
         >
-          <ArrowLeft className="w-5 h-5 text-slate-700" />
+          <ArrowLeft className="h-4 w-4" />
         </button>
-        <div className="flex-1">
-          <p className="font-bold text-slate-900">{assignment.displayId}</p>
-          <p className="text-xs text-slate-500">{assignment.orderSummary}</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-slate-900 truncate">{assignment.displayId}</p>
+          <p className="text-xs text-slate-400 truncate">{assignment.orderSummary}</p>
         </div>
-        <span className={clsx("text-[10px] font-bold px-2.5 py-1.5 rounded-full", STATUS_COLORS[assignment.status])}>
-          {assignment.status.replace("_", " ")}
+        <span className={clsx(
+          "shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold",
+          sm.bg, sm.text
+        )}>
+          <span className={clsx("h-1.5 w-1.5 rounded-full", sm.dot)} />
+          {sm.label}
         </span>
       </div>
 
-      <div className="p-4 space-y-4 pb-32">
-        {/* Progress tracker */}
-        {!["CANCELLED", "REJECTED"].includes(assignment.status) && (
-          <div className="bg-white rounded-2xl border border-slate-100 p-4">
-            <p className="text-xs font-semibold text-slate-700 mb-3 uppercase tracking-wide">Delivery Progress</p>
+      {/* Content */}
+      <div className="space-y-3 px-4 py-4" style={{
+        paddingBottom: nextActions.length > 0 || assignment.status === "DELIVERED"
+          ? "calc(8rem + env(safe-area-inset-bottom))"
+          : "calc(6rem + env(safe-area-inset-bottom))"
+      }}>
+
+        {/* Progress stepper */}
+        {!isFinal || assignment.status === "DELIVERED" ? (
+          <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Progress</p>
             <div className="flex items-center">
               {STATUS_STEPS.map((step, i) => (
-                <div key={step} className="flex items-center flex-1 last:flex-none">
+                <div key={step} className="flex flex-1 items-center last:flex-none">
                   <div className={clsx(
-                    "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
-                    i <= currentStepIdx ? "bg-orange-500 text-white" : "bg-slate-100 text-slate-400"
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-all",
+                    i < currentStepIdx
+                      ? "bg-orange-500 text-white"
+                      : i === currentStepIdx
+                      ? "bg-orange-500 text-white shadow-md shadow-orange-400/40 ring-3 ring-orange-100"
+                      : "bg-slate-100 text-slate-400"
                   )}>
-                    {i < currentStepIdx ? <CheckCircle className="w-3.5 h-3.5" /> : i + 1}
+                    {i < currentStepIdx ? <CheckCircle className="h-3.5 w-3.5" /> : i + 1}
                   </div>
                   {i < STATUS_STEPS.length - 1 && (
                     <div className={clsx(
-                      "flex-1 h-0.5 mx-1",
-                      i < currentStepIdx ? "bg-orange-500" : "bg-slate-100"
+                      "mx-1 h-0.5 flex-1 rounded-full transition-all",
+                      i < currentStepIdx ? "bg-orange-400" : "bg-slate-100"
                     )} />
                   )}
                 </div>
               ))}
             </div>
-            <div className="flex justify-between mt-2">
-              {STATUS_STEPS.map(step => (
-                <p key={step} className="text-[9px] text-slate-500 text-center" style={{ flex: 1 }}>
-                  {step.replace("_", " ")}
+            <div className="mt-2 flex justify-between">
+              {STEP_LABELS.map((label, i) => (
+                <p key={label} className={clsx(
+                  "flex-1 text-center text-[9px] font-medium leading-tight",
+                  i <= currentStepIdx ? "text-orange-600" : "text-slate-400"
+                )}>
+                  {label}
                 </p>
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
-        {/* Earnings card */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-4 text-white">
-          <div className="flex items-center justify-between">
+        {/* Earning card */}
+        <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-4 shadow-lg">
+          <div className="flex items-start justify-between mb-3">
             <div>
-              <p className="text-orange-200 text-xs font-medium">Your Earning</p>
-              <p className="text-2xl font-bold">₹{(assignment.deliveryFee / 100).toFixed(0)}</p>
+              <p className="text-xs text-slate-400 font-medium mb-0.5">Your Earning</p>
+              <p className="text-3xl font-bold text-white">₹{(assignment.deliveryFee / 100).toFixed(0)}</p>
             </div>
-            <div className="text-right">
-              <p className="text-orange-200 text-xs">Order Total</p>
-              <p className="text-white font-semibold">₹{(assignment.orderTotal / 100).toFixed(0)}</p>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500/20">
+              <IndianRupee className="h-5 w-5 text-orange-400" />
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/20">
-            <CreditCard className="w-4 h-4 text-orange-200" />
-            <span className="text-sm font-medium">
-              {assignment.paymentMode?.toUpperCase()}
+          <div className="flex items-center justify-between border-t border-white/10 pt-3">
+            <div className="flex items-center gap-2 text-sm text-slate-300">
+              <CreditCard className="h-4 w-4 text-slate-400" />
+              <span className="font-medium">{assignment.paymentMode?.toUpperCase()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">Order total: ₹{(assignment.orderTotal / 100).toFixed(0)}</span>
               {assignment.paid
-                ? <span className="ml-2 bg-green-500/30 text-green-200 text-[10px] px-2 py-0.5 rounded-full">Paid</span>
-                : <span className="ml-2 bg-red-500/30 text-red-200 text-[10px] px-2 py-0.5 rounded-full">Collect ₹{(assignment.orderTotal / 100).toFixed(0)}</span>
+                ? <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-[10px] font-bold text-green-400">Paid</span>
+                : <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">Collect ₹{(assignment.orderTotal / 100).toFixed(0)}</span>
               }
-            </span>
-          </div>
-        </div>
-
-        {/* Pickup location */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
-              <Store className="w-3.5 h-3.5 text-green-600" />
             </div>
-            <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Pickup — {assignment.sellerStoreName}</p>
-          </div>
-          <p className="text-sm text-slate-600 mb-3">{assignment.pickupAddress || "Pickup address on file"}</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => openMaps(assignment.pickupAddress || assignment.sellerStoreName, "Pickup Location")}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-50 text-green-700 border border-green-200 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-100 transition-colors"
-            >
-              <Navigation className="w-4 h-4" />
-              Open Pickup in Maps
-            </button>
-            {assignment.sellerPhone && (
-              <a
-                href={`tel:${assignment.sellerPhone}`}
-                className="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
-              >
-                <Phone className="w-4 h-4 text-slate-700" />
-              </a>
-            )}
           </div>
         </div>
 
-        {/* Delivery location */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-4">
+        {/* Pickup */}
+        <LocationCard
+          type="pickup"
+          title={assignment.sellerStoreName || "Seller Store"}
+          address={assignment.pickupAddress || "Pickup address on file"}
+          phone={assignment.sellerPhone}
+          onNavigate={() => openMaps(assignment.pickupAddress || assignment.sellerStoreName, "Pickup")}
+        />
+
+        {/* Delivery */}
+        <LocationCard
+          type="delivery"
+          title={assignment.customerName || "Customer"}
+          address={delivAddr
+            ? [delivAddr.addressLine, delivAddr.city, delivAddr.state, delivAddr.pincode].filter(Boolean).join(", ")
+            : assignment.deliveryAddress || "Delivery address on file"
+          }
+          phone={assignment.customerPhone || delivAddr?.phone}
+          onNavigate={() => {
+            const addr = delivAddr
+              ? [delivAddr.addressLine, delivAddr.city, delivAddr.pincode].filter(Boolean).join(" ")
+              : assignment.deliveryAddress;
+            openMaps(addr || "delivery", "Customer");
+          }}
+        />
+
+        {/* Order details */}
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center">
-              <User className="w-3.5 h-3.5 text-orange-600" />
-            </div>
-            <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-              Deliver To — {assignment.customerName || "Customer"}
-            </p>
+            <Package className="h-4 w-4 text-slate-400" />
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Order Details</p>
           </div>
-          <p className="text-sm text-slate-600 mb-1">
-            {delivAddr
-              ? [delivAddr.addressLine, delivAddr.city, delivAddr.state, delivAddr.pincode].filter(Boolean).join(", ")
-              : assignment.deliveryAddress || "Delivery address on file"
-            }
-          </p>
-          {delivAddr?.phone && (
-            <p className="text-xs text-slate-500 mb-3">{delivAddr.phone}</p>
-          )}
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const addr = delivAddr
-                  ? [delivAddr.addressLine, delivAddr.city, delivAddr.pincode].filter(Boolean).join(" ")
-                  : assignment.deliveryAddress;
-                openMaps(addr || "delivery", "Delivery Location");
-              }}
-              className="flex-1 flex items-center justify-center gap-2 bg-orange-50 text-orange-700 border border-orange-200 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-100 transition-colors"
-            >
-              <Navigation className="w-4 h-4" />
-              Open Delivery in Maps
-            </button>
-            {(assignment.customerPhone || delivAddr?.phone) && (
-              <a
-                href={`tel:${assignment.customerPhone || delivAddr?.phone}`}
-                className="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
-              >
-                <Phone className="w-4 h-4 text-slate-700" />
-              </a>
-            )}
-          </div>
-        </div>
-
-        {/* Order summary */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-4">
-          <p className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <Package className="w-3.5 h-3.5" /> Order Details
-          </p>
-          <div className="space-y-2 text-sm">
-            <Row label="Order ID" value={assignment.displayId} />
-            <Row label="Summary" value={assignment.orderSummary} />
-            <Row label="Assigned" value={assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleString() : "—"} />
-            {assignment.pickedUpAt && <Row label="Picked Up" value={new Date(assignment.pickedUpAt).toLocaleString()} />}
-            {assignment.deliveredAt && <Row label="Delivered" value={new Date(assignment.deliveredAt).toLocaleString()} />}
-            {assignment.notes && <Row label="Notes" value={assignment.notes} />}
+          <div className="space-y-2.5">
+            <DetailRow label="Order ID" value={assignment.displayId} />
+            <DetailRow label="Summary" value={assignment.orderSummary} />
+            <DetailRow label="Assigned" value={assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—"} />
+            {assignment.pickedUpAt && <DetailRow label="Picked Up" value={new Date(assignment.pickedUpAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })} />}
+            {assignment.deliveredAt && <DetailRow label="Delivered" value={new Date(assignment.deliveredAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })} />}
+            {assignment.notes && <DetailRow label="Notes" value={assignment.notes} />}
           </div>
         </div>
       </div>
 
-      {/* Fixed action buttons */}
+      {/* Action bar */}
       {nextActions.length > 0 && (
-        <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 lg:left-64 bg-white border-t border-slate-200 p-4 z-30">
-          <div className="flex gap-3 max-w-lg mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/97 backdrop-blur-xl lg:left-[260px]"
+          style={{ padding: "0.75rem 1rem", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))", paddingTop: "0.75rem" }}>
+          <div className="mx-auto flex max-w-lg gap-2.5">
             {nextActions.map(action => (
               <button
                 key={action.status}
+                type="button"
                 onClick={() => statusMut.mutate(action.status)}
                 disabled={statusMut.isPending}
                 className={clsx(
-                  "flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-60",
-                  action.color
+                  "flex min-h-[50px] flex-1 items-center justify-center gap-2 rounded-2xl text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-60",
+                  action.primary
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25"
+                    : "border border-slate-200 bg-slate-50 text-slate-700"
                 )}
               >
                 {statusMut.isPending
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : action.status === "DELIVERED"
-                    ? <TrendingUp className="w-4 h-4" />
-                    : <CheckCircle className="w-4 h-4" />
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <CheckCircle className="h-4 w-4" />
                 }
                 {action.label}
               </button>
@@ -288,10 +264,11 @@ export default function AssignmentDetail() {
       )}
 
       {assignment.status === "DELIVERED" && (
-        <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 lg:left-64 bg-green-50 border-t border-green-200 p-4 z-30">
-          <div className="flex items-center justify-center gap-2 text-green-700 font-semibold">
-            <CheckCircle className="w-5 h-5" />
-            Delivery Completed — Earnings Credited
+        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-green-200 bg-green-50/97 backdrop-blur-xl lg:left-[260px]"
+          style={{ padding: "0.875rem 1rem", paddingBottom: "max(0.875rem, env(safe-area-inset-bottom))" }}>
+          <div className="flex items-center justify-center gap-2 text-green-700 font-semibold text-sm">
+            <CheckCircle className="h-5 w-5" />
+            Delivery Complete — Earnings Credited
           </div>
         </div>
       )}
@@ -299,11 +276,65 @@ export default function AssignmentDetail() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function LocationCard({
+  type, title, address, phone, onNavigate
+}: {
+  type: "pickup" | "delivery"; title: string; address: string; phone?: string; onNavigate: () => void;
+}) {
+  const isPickup = type === "pickup";
   return (
-    <div className="flex justify-between gap-4">
-      <span className="text-slate-500 shrink-0">{label}</span>
-      <span className="text-slate-900 font-medium text-right">{value}</span>
+    <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-2.5 mb-3">
+        <div className={clsx(
+          "flex h-8 w-8 items-center justify-center rounded-xl",
+          isPickup ? "bg-emerald-100" : "bg-orange-100"
+        )}>
+          {isPickup
+            ? <Store className="h-4 w-4 text-emerald-600" />
+            : <User className="h-4 w-4 text-orange-600" />
+          }
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            {isPickup ? "Pickup from" : "Deliver to"}
+          </p>
+          <p className="text-sm font-semibold text-slate-900 truncate">{title}</p>
+        </div>
+      </div>
+      <p className="text-sm text-slate-600 mb-3 leading-relaxed">{address}</p>
+      {phone && <p className="text-xs text-slate-400 mb-3">{phone}</p>}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onNavigate}
+          className={clsx(
+            "flex flex-1 min-h-[44px] items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors active:opacity-80",
+            isPickup
+              ? "border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+              : "border border-orange-200 bg-orange-50 text-orange-800 hover:bg-orange-100"
+          )}
+        >
+          <Navigation className="h-4 w-4" />
+          Open in Maps
+        </button>
+        {phone && (
+          <a
+            href={`tel:${phone}`}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200"
+          >
+            <Phone className="h-4 w-4" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <span className="text-xs text-slate-400 shrink-0">{label}</span>
+      <span className="text-xs font-medium text-slate-800 text-right">{value}</span>
     </div>
   );
 }
