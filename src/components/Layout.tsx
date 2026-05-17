@@ -30,11 +30,12 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   "/assignments": { title: "Orders", subtitle: "Active & history" },
   "/wallet": { title: "Wallet", subtitle: "Earnings & payouts" },
   "/notifications": { title: "Alerts", subtitle: "Updates & messages" },
+  "/profile": { title: "Profile", subtitle: "Account & documents" },
 };
 
 function matchRoute(pathname: string) {
   if (pathname.startsWith("/assignments/")) return "stack";
-  if (pathname === "/dashboard" || pathname === "/profile") return "immersive";
+  if (pathname === "/dashboard") return "immersive";
   if (PAGE_TITLES[pathname]) return "standard";
   return "standard";
 }
@@ -207,8 +208,7 @@ export default function Layout() {
           className={clsx(
             "app-main",
             isImmersive && "app-main--immersive",
-            isStack && "app-main--stack",
-            !isStack && !isImmersive && "app-main--tabs"
+            isStack && "app-main--stack"
           )}
         >
           <Outlet />
@@ -258,7 +258,7 @@ export default function Layout() {
             >
               <div className="flex h-full min-h-0 flex-col">
                 <div
-                  className="flex items-center justify-between px-4 pb-4"
+                  className="flex items-center justify-between border-b border-slate-100 px-4 pb-4"
                   style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
                 >
                   <div className="flex min-w-0 items-center gap-3">
@@ -266,40 +266,38 @@ export default function Layout() {
                       <Bike className="h-5 w-5 text-white" strokeWidth={2.25} />
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-[15px] font-bold text-white">Nainital Store</p>
-                      <p className="text-[10px] font-medium uppercase tracking-widest text-white/40">
-                        Delivery Partner
-                      </p>
+                      <p className="truncate text-[15px] font-bold text-slate-900">Nainital Store</p>
+                      <p className="text-[11px] font-medium text-slate-400">Delivery Partner</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={closeDrawer}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/70 active:bg-white/15"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 active:bg-slate-200"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
-                <div className="mx-4 mb-4 rounded-2xl bg-white/[0.06] p-3.5 ring-1 ring-white/[0.08]">
+                <div className="mx-4 mt-4 mb-3 rounded-2xl border border-slate-100 bg-slate-50 p-3.5">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-rose-500 text-base font-bold text-white">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 text-base font-bold text-white shadow-sm">
                       {partner?.name?.charAt(0).toUpperCase() ?? "D"}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-white">{partner?.name}</p>
-                      <p className="truncate text-xs text-white/45">{partner?.phone}</p>
+                      <p className="truncate text-sm font-bold text-slate-900">{partner?.name}</p>
+                      <p className="truncate text-xs text-slate-500">{partner?.phone}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mx-4 mb-4 flex items-center justify-between rounded-2xl bg-white/[0.06] px-4 py-3.5 ring-1 ring-white/[0.08]">
+                <div className="mx-4 mb-3 flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3.5 shadow-sm">
                   <div>
-                    <p className="text-sm font-semibold text-white">
-                      {isOnline ? "You're online" : "Go online"}
+                    <p className="text-sm font-semibold text-slate-900">
+                      {isOnline ? "Online" : "Offline"}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-white/40">
-                      {isOnline ? "Receiving delivery requests" : "Tap to start earning"}
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {isOnline ? "Receiving orders" : "Go online to earn"}
                     </p>
                   </div>
                   <OnlineSwitch large />
@@ -321,8 +319,8 @@ export default function Layout() {
                         clsx(
                           "flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-medium transition-colors",
                           isActive
-                            ? "bg-orange-500 text-white"
-                            : "text-white/70 active:bg-white/[0.06]"
+                            ? "bg-orange-50 text-orange-700"
+                            : "text-slate-700 active:bg-slate-50"
                         )
                       }
                     >
@@ -332,7 +330,7 @@ export default function Layout() {
                           {badge > 9 ? "9+" : badge}
                         </span>
                       )}
-                      <ChevronRight className="h-4 w-4 opacity-40" />
+                      <ChevronRight className="h-4 w-4 text-slate-300" />
                     </NavLink>
                   ))}
                 </nav>
@@ -343,20 +341,20 @@ export default function Layout() {
                       className={clsx(
                         "flex items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-semibold",
                         status === "APPROVED"
-                          ? "bg-emerald-500/15 text-emerald-300"
+                          ? "bg-emerald-50 text-emerald-700"
                           : status === "PENDING"
-                            ? "bg-amber-500/15 text-amber-300"
-                            : "bg-red-500/15 text-red-300"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-red-50 text-red-700"
                       )}
                     >
                       <span
                         className={clsx(
                           "h-2 w-2 rounded-full",
                           status === "APPROVED"
-                            ? "bg-emerald-400"
+                            ? "bg-emerald-500"
                             : status === "PENDING"
-                              ? "bg-amber-400"
-                              : "bg-red-400"
+                              ? "bg-amber-500"
+                              : "bg-red-500"
                         )}
                       />
                       {status === "APPROVED"
@@ -369,13 +367,13 @@ export default function Layout() {
                 )}
 
                 <div
-                  className="border-t border-white/[0.08] px-4 py-4"
+                  className="border-t border-slate-100 px-4 py-4"
                   style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
                 >
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-3 text-sm font-medium text-white/50 active:bg-white/[0.06] active:text-red-400"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-3 text-sm font-medium text-slate-500 active:bg-red-50 active:text-red-600"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign out
