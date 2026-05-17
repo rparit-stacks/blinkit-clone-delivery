@@ -14,7 +14,6 @@ import {
   Bike,
   Power,
   Bell,
-  ChevronRight,
 } from "lucide-react";
 import { fetchNotifications, getUnreadCount } from "../lib/notificationsApi";
 import clsx from "clsx";
