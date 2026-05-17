@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import {
-  deliveryRegister, uploadFile, updateProfile, resolveMediaUrl,
+  deliveryRegister, uploadKycDocument, resolveMediaUrl, type KycDocType,
   deliverySendOtp, deliveryVerifyOtp,
 } from "../../api/deliveryApi";
 import { useAuth } from "../../context/AuthContext";
@@ -25,7 +25,7 @@ const VEHICLE_TYPES = [
   { value: "CAR", label: "Car", icon: "🚗" },
 ];
 
-type DocKey = "idProofUrl" | "licenseUrl" | "vehicleImageUrl" | "profileImage";
+type DocKey = KycDocType;
 
 const DOC_FIELDS: { key: DocKey; label: string; desc: string; required: boolean }[] = [
   { key: "profileImage", label: "Profile Photo", desc: "Clear front-facing photo", required: true },
@@ -127,8 +127,7 @@ export default function Register() {
   const handleFileSelect = async (key: DocKey, file: File) => {
     setUploadingDoc(key);
     try {
-      const url = await uploadFile(file, "delivery-docs");
-      await updateProfile({ [key]: url });
+      const url = await uploadKycDocument(file, key);
       setDocs(d => ({ ...d, [key]: url }));
       toast.success("Uploaded successfully");
     } catch (err) {

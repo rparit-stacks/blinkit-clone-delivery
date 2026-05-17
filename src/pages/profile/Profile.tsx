@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchProfile, updateProfile, uploadFile, resolveMediaUrl } from "../../api/deliveryApi";
+import { fetchProfile, updateProfile, uploadKycDocument, resolveMediaUrl, type KycDocType } from "../../api/deliveryApi";
 import { useAuth } from "../../context/AuthContext";
 import {
   User, Phone, Mail, Bike, CreditCard, Shield, CheckCircle,
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import clsx from "clsx";
 
 const VEHICLE_TYPES = ["BIKE", "SCOOTER", "CYCLE", "CAR"];
-type DocKey = "idProofUrl" | "licenseUrl" | "vehicleImageUrl" | "profileImage";
+type DocKey = KycDocType;
 
 const DOC_FIELDS: { key: DocKey; label: string; desc: string; required: boolean }[] = [
   { key: "profileImage",    label: "Profile Photo",  desc: "Clear front-facing photo",   required: true },
@@ -61,8 +61,7 @@ export default function Profile() {
   const handleDocUpload = async (key: DocKey, file: File) => {
     setUploadingDoc(key);
     try {
-      const url = await uploadFile(file, "delivery-docs");
-      await updateProfile({ [key]: url } as Parameters<typeof updateProfile>[0]);
+      await uploadKycDocument(file, key);
       qc.invalidateQueries({ queryKey: ["delivery", "profile"] });
       toast.success("Document uploaded");
     } catch (err) {

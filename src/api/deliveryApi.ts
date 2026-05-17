@@ -163,12 +163,18 @@ export const deliverySendOtp = (email: string) =>
 export const deliveryVerifyOtp = (email: string, otp: string) =>
   post<{ verified: string }>("/api/delivery/auth/verify-otp", { email, otp });
 
-// ─── File upload ─────────────────────────────────────────────────────────────
-export async function uploadFile(file: File, folder = "delivery-docs"): Promise<string> {
+// ─── KYC upload (Cloudinary via backend — no manual URL) ───────────────────────
+export type KycDocType = "profileImage" | "idProofUrl" | "licenseUrl" | "vehicleImageUrl";
+
+export async function uploadKycDocument(file: File, docType: KycDocType): Promise<string> {
   const form = new FormData();
   form.append("file", file);
-  form.append("folder", folder);
-  const res = await fetch(`${BASE}/api/upload`, { method: "POST", body: form });
+  form.append("docType", docType);
+  const res = await fetch(`${BASE}/api/delivery/upload/kyc`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: form,
+  });
   const json = await res.json();
   if (!res.ok || !json.success) throw new Error(json.message ?? "Upload failed");
   return json.data.url as string;
